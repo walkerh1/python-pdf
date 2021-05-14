@@ -32,3 +32,4 @@ with open(new_filename, 'wb') as pdf_output:
 # TODO: implement PDF split
 
 # TODO: implement PDF encryption
+

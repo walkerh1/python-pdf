@@ -6,30 +6,61 @@
 import sys
 import PyPDF2
 
-# TODO: process command-line arguments
 
-# No pdf files specified.
-if len(sys.argv) <= 2:
-    sys.exit(f"Usage: {sys.argv[0]} <new_filename> <file1.pdf> ... <filen.pdf>")
+def merge(new_file, pdfs):
+    """Merge pdfs into new pdf file."""
 
-# Merge PDFs
-# Initialise variables.
-new_filename = sys.argv[1]
-pdf_merger = PyPDF2.PdfFileMerger()
+    # Initialise merge object.
+    pdf_merger = PyPDF2.PdfFileMerger()
 
-# Append files to merge object.
-for filename in sys.argv[2:]:
-    pdf_merger.append(filename)
+    # Append files to merge object.
+    for filename in pdfs:
+        pdf_merger.append(filename)
 
-# Write the merged files to new pdf file.
-with open(new_filename, 'wb') as pdf_output:
-    pdf_merger.write(pdf_output)
+    # Write the merged files to new pdf file.
+    with open(new_file, 'wb') as pdf_output:
+        pdf_merger.write(pdf_output)
 
-# TODO: implement PDF info extraction
 
-# TODO: implement PDF page rotation
+def extraxt(*pdfs):
+    # TODO: implement PDF info extraction
+    pass
 
-# TODO: implement PDF split
 
-# TODO: implement PDF encryption
+def rotatePages(pdf, pages):
+    # TODO: implement PDF page rotation
+    pass
 
+
+def splitPDF(pdf, *newfiles):
+    # TODO: implement PDF split
+    pass
+
+
+def encrypt(*pdfs):
+    # TODO: implement PDF encryption
+    pass
+
+
+if __name__ == '__main__':
+
+    if len(sys.argv) < 3:
+        sys.exit(f"Usage: {sys.argv[0]}: <command> <files>")
+
+    elif sys.argv[1] == 'merge' and len(sys.argv[2:]) > 1:
+        merge(sys.argv[2], sys.argv[3:])
+
+    elif sys.argv[1] == 'extract':
+        pass
+
+    elif sys.argv[1] == 'rotate':
+        pass
+
+    elif sys.argv[1] == 'split':
+        pass
+
+    elif sys.argv[1] == 'encrypt':
+        pass
+
+    else:
+        sys.exit(f"Usage: {sys.argv[0]}: <command> <files>")

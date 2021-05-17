@@ -4,11 +4,29 @@
 # module, PyPDF2, allowing users to manipulate PDFs from the command-line.
 
 import sys
+import os.path
 import PyPDF2
+from datetime import datetime, timezone
+
+
+def _fileExists(file):
+    # TODO: check file path exists
+    pass
 
 
 def merge(new_file, pdfs):
     """Merge pdfs into new pdf file."""
+
+    # Make sure all pdf files exist
+    for file in pdfs:
+        if not os.path.isfile(file):
+            sys.exit(f"The file {file} does not exist")
+
+    # Make sure new_file does not already exist
+    if os.path.isfile(new_file):
+        response = input("{new_file} exists, type 'y' to overwrite: ")
+        if response != 'y':
+            sys.exit(1)
 
     # Initialise merge object.
     pdf_merger = PyPDF2.PdfFileMerger()
@@ -17,14 +35,33 @@ def merge(new_file, pdfs):
     for filename in pdfs:
         pdf_merger.append(filename)
 
-    # Write the merged files to new pdf file.
+    # Write the merge object to new pdf file.
     with open(new_file, 'wb') as pdf_output:
         pdf_merger.write(pdf_output)
 
 
-def extraxt(*pdfs):
-    # TODO: implement PDF info extraction
-    pass
+def info(pdfs):
+    """Extract meta data from given pdfs and print to stdout. Includes:
+    title, author, creator, subject, and number of pages."""
+
+    # Make sure all pdf files exist
+    for file in pdfs:
+        if not os.path.isfile(file):
+            sys.exit(f"The file {file} does not exist")
+
+    # Get and print meta data for each pdf file.
+    for file in pdfs:
+        with open(file, 'rb') as f:
+            pdf_reader = PyPDF2.PdfFileReader(f)
+            info = pdf_reader.getDocumentInfo()
+            num_of_pages = pdf_reader.getNumPages()
+
+        print(f"{file}")
+        print(f"    Title: {info.title}")
+        print(f"    Author: {info.author}")
+        print(f"    Creator: {info.creator}")
+        print(f"    Subject: {info.subject}")
+        print(f"    Number of pages: {num_of_pages}\n")
 
 
 def rotatePages(pdf, pages):
@@ -32,12 +69,12 @@ def rotatePages(pdf, pages):
     pass
 
 
-def splitPDF(pdf, *newfiles):
+def splitPDF(pdf, newfiles):
     # TODO: implement PDF split
     pass
 
 
-def encrypt(*pdfs):
+def encrypt(pdfs):
     # TODO: implement PDF encryption
     pass
 
@@ -50,8 +87,8 @@ if __name__ == '__main__':
     elif sys.argv[1] == 'merge' and len(sys.argv[2:]) > 1:
         merge(sys.argv[2], sys.argv[3:])
 
-    elif sys.argv[1] == 'extract':
-        pass
+    elif sys.argv[1] == 'info':
+        info(sys.argv[2:])
 
     elif sys.argv[1] == 'rotate':
         pass

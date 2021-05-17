@@ -6,12 +6,6 @@
 import sys
 import os.path
 import PyPDF2
-from datetime import datetime, timezone
-
-
-def _fileExists(file):
-    # TODO: check file path exists
-    pass
 
 
 def merge(new_file, pdfs):
@@ -20,11 +14,11 @@ def merge(new_file, pdfs):
     # Make sure all pdf files exist
     for file in pdfs:
         if not os.path.isfile(file):
-            sys.exit(f"The file {file} does not exist")
+            sys.exit(f"'{file}' does not exist.")
 
     # Make sure new_file does not already exist
     if os.path.isfile(new_file):
-        response = input("{new_file} exists, type 'y' to overwrite: ")
+        response = input(f"'{new_file}' exists, overwrite? (y/n) ")
         if response != 'y':
             sys.exit(1)
 
@@ -32,8 +26,11 @@ def merge(new_file, pdfs):
     pdf_merger = PyPDF2.PdfFileMerger()
 
     # Append files to merge object.
-    for filename in pdfs:
-        pdf_merger.append(filename)
+    for file in pdfs:
+        try:
+            pdf_merger.append(file)
+        except PyPDF2.utils.PdfReadError:
+            sys.exit(f"'{file}' is not a valid PDF file.")
 
     # Write the merge object to new pdf file.
     with open(new_file, 'wb') as pdf_output:
@@ -47,21 +44,37 @@ def info(pdfs):
     # Make sure all pdf files exist
     for file in pdfs:
         if not os.path.isfile(file):
-            sys.exit(f"The file {file} does not exist")
+            sys.exit(f"'{file}' does not exist.")
 
     # Get and print meta data for each pdf file.
     for file in pdfs:
         with open(file, 'rb') as f:
-            pdf_reader = PyPDF2.PdfFileReader(f)
+            try:
+                pdf_reader = PyPDF2.PdfFileReader(f)
+            except PyPDF2.utils.PdfReadError:
+                print(f"'{file}' is not a valid PDF file.\n")
+                continue
             info = pdf_reader.getDocumentInfo()
             num_of_pages = pdf_reader.getNumPages()
+
+        # Convert dates to 'DD/MM/YYYY HH:MM:SS'
+        created = info['/CreationDate']
+        last_modified = info['/ModDate']
+        created = (created[8:10] + '/' + created[6:8] + '/' +
+                   created[2:6] + ' ' + created[10:12] + ':' +
+                   created[12:14] + ':' + created[14:16])
+        last_modified = (last_modified[8:10] + '/' + last_modified[6:8] + '/' +
+                   last_modified[2:6] + ' ' + last_modified[10:12] + ':' +
+                   last_modified[12:14] + ':' + last_modified[14:16])
 
         print(f"{file}")
         print(f"    Title: {info.title}")
         print(f"    Author: {info.author}")
         print(f"    Creator: {info.creator}")
         print(f"    Subject: {info.subject}")
-        print(f"    Number of pages: {num_of_pages}\n")
+        print(f"    Number of Pages: {num_of_pages}")
+        print(f"    Created: {created}")
+        print(f"    Last Modified: {last_modified}\n")
 
 
 def rotatePages(pdf, pages):

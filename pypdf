@@ -6,21 +6,28 @@
 import sys
 import os.path
 import PyPDF2
+import re
+from getpass import getpass
+
+
+def _filesExist(files):
+    """Exit if one of the files doesn't exist."""
+    for file in files:
+        if not os.path.isfile(file):
+            sys.exit(f"'{file}' does not exist.")
 
 
 def merge(new_file, pdfs):
     """Merge pdfs into new pdf file."""
 
-    # Make sure all pdf files exist
-    for file in pdfs:
-        if not os.path.isfile(file):
-            sys.exit(f"'{file}' does not exist.")
+    # Make sure all pdfs exist
+    _filesExist(pdfs)
 
     # Make sure new_file does not already exist
     if os.path.isfile(new_file):
         response = input(f"'{new_file}' exists, overwrite? (y/n) ")
         if response != 'y':
-            sys.exit(1)
+            sys.exit(0)
 
     # Initialise merge object.
     pdf_merger = PyPDF2.PdfFileMerger()
@@ -36,17 +43,17 @@ def merge(new_file, pdfs):
     with open(new_file, 'wb') as pdf_output:
         pdf_merger.write(pdf_output)
 
+    print(f"'{new_file}' created.")
+
 
 def info(pdfs):
     """Extract meta data from given pdfs and print to stdout. Includes:
     title, author, creator, subject, and number of pages."""
 
     # Make sure all pdf files exist
-    for file in pdfs:
-        if not os.path.isfile(file):
-            sys.exit(f"'{file}' does not exist.")
+    _filesExist(pdfs)
 
-    # Get and print meta data for each pdf file.
+    # Get and print meta data for each pdf.
     for file in pdfs:
         with open(file, 'rb') as f:
             try:
@@ -88,8 +95,45 @@ def splitPDF(pdf, newfiles):
 
 
 def encrypt(pdfs):
-    # TODO: implement PDF encryption
-    pass
+
+    # Make sure all pdf files exist
+    _filesExist(pdfs)
+
+    # Encrypt pdfs
+    for file in pdfs:
+
+        # Get password.
+        password = getpass(prompt="Enter password: ")
+        confirm = getpass(prompt="Confirm password: ")
+        while password != confirm:
+            print("Passwords do not match.")
+            password = getpass(prompt="Enter again: ")
+            confirm = getpass(prompt="Confirm: ")
+
+        # Initialise PDF reader object.
+        try:
+            pdf_reader = PyPDF2.PdfFileReader(file)
+        except PyPDF2.utils.PdfReadError:
+            print(f"'{file}' is not a valid PDF file.")
+            continue
+
+        # Initialise PDF writer object
+        pdf_writer = PyPDF2.PdfFileWriter()
+        pdf_writer.appendPagesFromReader(pdf_reader)
+
+        # Encrypt PDF (128bit encryption by default)
+        pdf_writer.encrypt(password)
+
+        # Generate name for encrypted file
+        output = re.sub(r'(.*)(\.pdf)$',
+                        r'\1_encrypted\2',
+                        file)
+
+        # Generate encrypted file.
+        with open(output, 'wb') as f:
+            pdf_writer.write(f)
+
+        print(f"'{output}' created.")
 
 
 if __name__ == '__main__':
@@ -110,7 +154,7 @@ if __name__ == '__main__':
         pass
 
     elif sys.argv[1] == 'encrypt':
-        pass
+        encrypt(sys.argv[2:])
 
     else:
         sys.exit(f"Usage: {sys.argv[0]}: <command> <files>")

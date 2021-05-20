@@ -48,9 +48,10 @@ def merge(new_file, pdfs):
 
 def info(pdfs):
     """Extract meta data from given pdfs and print to stdout. Includes:
-    title, author, creator, subject, and number of pages."""
+    title, author, creator, subject, number of pages, date created, and
+    date last modified."""
 
-    # Make sure all pdf files exist
+    # Make sure all pdfs exist
     _filesExist(pdfs)
 
     # Get and print meta data for each pdf.
@@ -84,9 +85,27 @@ def info(pdfs):
         print(f"    Last Modified: {last_modified}\n")
 
 
-def rotatePages(pdf, pages):
-    # TODO: implement PDF page rotation
-    pass
+def rotatePages(pdf, pages=None):
+    """Takes one pdf and an optional page range and rotates those
+    pages 90 degrees clockwise."""
+
+    # Initialise pdf reader object
+    try:
+        pdf_reader = PyPDF2.PdfFileReader(pdf)
+    except PyPDF2.utils.PdfReadError:
+        print(f"'{pdf}' is not a valid PDF file.\n")
+
+    # Initialise pdf writer object
+    pdf_writer = PyPDF2.PdfFileWriter()
+
+    # Rotate pages 90 degrees clockwise
+    for i in range(pdf_reader.getNumPages()):
+        page = pdf_reader.getPage(i).rotateClockwise(90)
+        pdf_writer.addPage(page)
+
+    # Overwrite pdf with rotated pdf
+    with open(pdf, 'wb') as f:
+        pdf_writer.write(f)
 
 
 def splitPDF(pdf, newfiles):
@@ -95,11 +114,12 @@ def splitPDF(pdf, newfiles):
 
 
 def encrypt(pdfs):
+    """Create encrypted versions of the given pdfs"""
 
-    # Make sure all pdf files exist
+    # Make sure all pdfs exist
     _filesExist(pdfs)
 
-    # Encrypt pdfs
+    # Encrypt pdfs, one at a time
     for file in pdfs:
 
         # Get password.
@@ -110,26 +130,26 @@ def encrypt(pdfs):
             password = getpass(prompt="Enter again: ")
             confirm = getpass(prompt="Confirm: ")
 
-        # Initialise PDF reader object.
+        # Initialise pdf reader object.
         try:
             pdf_reader = PyPDF2.PdfFileReader(file)
         except PyPDF2.utils.PdfReadError:
             print(f"'{file}' is not a valid PDF file.")
             continue
 
-        # Initialise PDF writer object
+        # Initialise pdf writer object
         pdf_writer = PyPDF2.PdfFileWriter()
         pdf_writer.appendPagesFromReader(pdf_reader)
 
         # Encrypt PDF (128bit encryption by default)
         pdf_writer.encrypt(password)
 
-        # Generate name for encrypted file
+        # Generate name for encrypted pdf
         output = re.sub(r'(.*)(\.pdf)$',
                         r'\1_encrypted\2',
                         file)
 
-        # Generate encrypted file.
+        # Generate encrypted pdf.
         with open(output, 'wb') as f:
             pdf_writer.write(f)
 
@@ -148,7 +168,7 @@ if __name__ == '__main__':
         info(sys.argv[2:])
 
     elif sys.argv[1] == 'rotate':
-        pass
+        rotatePages(sys.argv[2])
 
     elif sys.argv[1] == 'split':
         pass

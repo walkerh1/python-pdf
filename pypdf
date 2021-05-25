@@ -17,6 +17,14 @@ def _filesExist(files):
             sys.exit(f"'{file}' does not exist.")
 
 
+def _overwrite(file):
+    """Gives option of overwriting an existing file"""
+    if os.path.isfile(file):
+        response = input(f"'{file}' already exists, overwrite? (y/n) ")
+        if response != 'y':
+            sys.exit(0)
+
+
 def merge(new_file, pdfs):
     """Merge pdfs into new pdf file."""
 
@@ -24,10 +32,7 @@ def merge(new_file, pdfs):
     _filesExist(pdfs)
 
     # Make sure new_file does not already exist
-    if os.path.isfile(new_file):
-        response = input(f"'{new_file}' exists, overwrite? (y/n) ")
-        if response != 'y':
-            sys.exit(0)
+    _overwrite(new_file)
 
     # Initialise merge object.
     pdf_merger = PyPDF2.PdfFileMerger()
@@ -103,14 +108,60 @@ def rotatePages(pdf, pages=None):
         page = pdf_reader.getPage(i).rotateClockwise(90)
         pdf_writer.addPage(page)
 
-    # Overwrite pdf with rotated pdf
+    # Overwrite pdf with new rotated pdf
     with open(pdf, 'wb') as f:
         pdf_writer.write(f)
 
 
-def splitPDF(pdf, newfiles):
-    # TODO: implement PDF split
-    pass
+def split(pdf, split_page, newfiles=None):
+    """Takes one pdf and a single page number, and splits into two
+    pdfs on that page number. If no new filenames are provided, defaults
+    to filename_first.pdf and filename_second.pdf"""
+
+    # Check pdf exists.
+    _filesExist([pdf])
+
+    # Check newfiles do not already exist.
+    if newfiles:
+        for file in newfiles:
+            _overwrite(file)
+
+    # Initialise pdf reader object.
+    try:
+        pdf_reader = PyPDF2.PdfFileReader(pdf)
+    except PyPDF2.utils.PdfReadError:
+        sys.exit(f"'{pdf}' is not a valid PDF file.\n")
+
+    # Check page argument is valid.
+    num_pages = pdf_reader.getNumPages()
+    if split_page >= num_pages or split_page < 0:
+        sys.exit("Page number specified out of range")
+
+    # Initialise first pdf writer
+    page = 0
+    first = PyPDF2.PdfFileWriter()
+    while page < split_page:
+        first.addPage(pdf_reader.getPage(page))
+        page += 1
+
+    # Initialise second pdf writer
+    second = PyPDF2.PdfFileWriter()
+    while page < num_pages:
+        second.addPage(pdf_reader.getPage(page))
+        page += 1
+
+    # Create new pdf names
+    first_part = re.sub(r'(.*)(\.pdf)$', r'\1_first_part\2', pdf)
+    second_part = re.sub(r'(.*)(\.pdf)$', r'\1_second_part\2', pdf)
+
+    # Create new pdfs
+    with open(first_part, 'wb') as out:
+        first.write(out)
+    print(f"'{first_part}' created.")
+
+    with open(second_part, 'wb') as out:
+        second.write(out)
+    print(f"'{second_part}' created.")
 
 
 def encrypt(pdfs):
@@ -123,8 +174,8 @@ def encrypt(pdfs):
     for file in pdfs:
 
         # Get password.
-        password = getpass(prompt="Enter password: ")
-        confirm = getpass(prompt="Confirm password: ")
+        password = getpass(prompt="Enter new password: ")
+        confirm = getpass(prompt="Confirm new password: ")
         while password != confirm:
             print("Passwords do not match.")
             password = getpass(prompt="Enter again: ")
@@ -170,8 +221,13 @@ if __name__ == '__main__':
     elif sys.argv[1] == 'rotate':
         rotatePages(sys.argv[2])
 
-    elif sys.argv[1] == 'split':
-        pass
+    elif sys.argv[1] == 'split' and len(sys.argv[2:]) > 1:
+        try:
+            page = int(sys.argv[3])
+        except ValueError:
+            print(f"Usage: {sys.argv[0]} split <pdf> <int>")
+        else:
+            split(sys.argv[2], page)
 
     elif sys.argv[1] == 'encrypt':
         encrypt(sys.argv[2:])

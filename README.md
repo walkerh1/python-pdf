@@ -4,7 +4,7 @@ A command-line tool to make the core functionality of [PyPDF2](https://github.co
 ## SET-UP
 I follow the set-up for python-based command-line tools outlined [here](https://dbader.org/blog/how-to-make-command-line-commands-with-python):
 
-First, create a new directory called `~/bin` in your home directory with the following:
+First, create a new directory called `bin` in your home directory with the following:
 ```
 $ mkdir -p ~/bin 
 ```

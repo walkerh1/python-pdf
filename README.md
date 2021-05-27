@@ -14,7 +14,7 @@ export PATH=$PATH":$HOME/bin"
 ```
 Now, download and copy the script `pypdf` to `~/bin`.
 
-And finally, `cd` to `~/bin` and make sure `pypdf` is executable with the following:
+Finally, `cd` to `~/bin` and make sure `pypdf` is executable with the following:
 ```
 $ chmod +x pypdf
 ```

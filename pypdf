@@ -227,36 +227,7 @@ def encrypt(pdfs):
         print(f"'{output}' created.")
 
 
-def generateParser():
-    """Parse command-line arguments - plan is to first implement a parser for
-    merge function; this should familiarise me with the argparse library. Then
-    I want to refactor the code so that I have subparsers, one for each of
-    info, merge, rotate, split and encrypt."""
-
-    parser = argparse.ArgumentParser()
-
-    # positional arguments
-    parser.add_argument("merge",
-                        help="merge the listed pdf files provided")
-    parser.add_argument("first_filename", nargs=1,
-                        metavar="filename [page range]",
-                        help="")
-    parser.add_argument("filename_pgrgs", nargs=argparse.REMAINDER,
-                        metavar="filenames and optional page ranges")
-
-    # optional arguments
-    parser.add_argument("-o", "--output",
-                        metavar="output_file",
-                        help="write merged pdf to this output")
-    parser.add_argument("-v", "--verbose",
-                        help="show page ranges as they are being read")
-
-
 if __name__ == '__main__':
-
-    # Generate parser and use it parse command-line args
-    parser = generateParser()
-    args = parser.parse_args()
 
     if len(sys.argv) < 3:
         sys.exit(f"Usage: {sys.argv[0]}: <command> <files>")
